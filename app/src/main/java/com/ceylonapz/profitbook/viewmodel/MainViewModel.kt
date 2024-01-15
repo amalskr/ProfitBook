@@ -81,7 +81,16 @@ class MainViewModel : ViewModel() {
                 } else if (marketData.size == 1) {
                     //close positions
                     cancelAllOpenOrders()
-                    infoTxt.value = "Trade done & closed!"
+                    val tradeCloseStatus = if (isOpenTP) {
+                        "Loss"
+                    } else if (isOpenSL) {
+                        "Profit"
+                    } else {
+                        ""
+                    }
+
+                    infoTxt.value = "Trade $tradeCloseStatus!"
+
                 } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
                     /*
                     * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
