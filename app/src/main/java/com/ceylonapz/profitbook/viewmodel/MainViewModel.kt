@@ -152,7 +152,7 @@ class MainViewModel : ViewModel() {
                     val marketData = Gson().fromJson(resultMark, MarketInfo::class.java)
                     val originalBigDecimal = BigDecimal(marketData.markPrice)
                     val entryPrice = originalBigDecimal.setScale(4, RoundingMode.HALF_UP)
-                    infoTxt.value = "ADAUSDT $entryPrice"
+                    infoTxt.value = "ADA/USDT $entryPrice"
                 }
 
                 //get account info
