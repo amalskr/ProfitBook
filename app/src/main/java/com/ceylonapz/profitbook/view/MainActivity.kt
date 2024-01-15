@@ -113,9 +113,13 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            ActionButton(order_buy, mainVM)
-                            Spacer(modifier = Modifier.width(16.dp))
-                            ActionButton(order_sell, mainVM)
+                            if (!mainVM.isTradeRunning.value) {
+                                ActionButton(order_buy, mainVM)
+                                Spacer(modifier = Modifier.width(16.dp))
+                                ActionButton(order_sell, mainVM)
+                            } else {
+                                RunningTextView(mainVM)
+                            }
                         }
 
                         StatusTextView(mainVM)
@@ -185,6 +189,23 @@ fun AccountTextView(mainVm: MainViewModel) {
                 color = Color.Green
             ),
             modifier = Modifier.padding(bottom = 4.dp)
+        )
+    }
+}
+
+@Composable
+fun RunningTextView(mainVm: MainViewModel) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = mainVm.tradeRunStatus.value,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                color = Color.White
+            ),
+            modifier = Modifier.padding(4.dp)
         )
     }
 }

@@ -28,6 +28,7 @@ class MainViewModel : ViewModel() {
     var accountBalance = mutableStateOf("USDT")
     var infoTxt = mutableStateOf("Loading")
     var isTradeRunning = mutableStateOf(false)
+    var tradeRunStatus = mutableStateOf("")
 
     private var orderIdTP: Long = 0
     private var orderIdSL: Long = 0
@@ -74,6 +75,7 @@ class MainViewModel : ViewModel() {
                 if (marketData.size == 1) {
                     //close positions
                     cancelAllOpenOrders()
+                    tradeRunStatus.value = "Trade done & closed!"
                 } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
                     /*
                     * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
@@ -92,9 +94,13 @@ class MainViewModel : ViewModel() {
                     if (!isOpenSL) {
                         cancelTradeOrder(orderIdSL)
                     }
+                    tradeRunStatus.value = "Invalid Trade closed!"
+                } else {
+                    tradeRunStatus.value = "Trade is running..."
                 }
 
             } catch (e: Exception) {
+                tradeRunStatus.value = "Error " + e.message
                 Log.e("trade status", e.toString())
             }
         }
@@ -112,6 +118,7 @@ class MainViewModel : ViewModel() {
             }
 
             isTradeRunning.value = false
+            callBinanceInfo(isReload = true)
         }
     }
 
