@@ -5,16 +5,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.binance.connector.futures.client.exceptions.BinanceClientException
-import com.binance.connector.futures.client.exceptions.BinanceConnectorException
 import com.binance.connector.futures.client.impl.UMFuturesClientImpl
 import com.ceylonapz.profitbook.model.AccountInfo
 import com.ceylonapz.profitbook.model.MarketInfo
 import com.ceylonapz.profitbook.model.Order
+import com.ceylonapz.profitbook.util.OrderStatus
+import com.ceylonapz.profitbook.util.OrderType
 import com.ceylonapz.profitbook.util.PrivateConfig
 import com.ceylonapz.profitbook.view.MainActivity
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -26,9 +27,108 @@ class MainViewModel : ViewModel() {
 
     var accountBalance = mutableStateOf("USDT")
     var infoTxt = mutableStateOf("Loading")
+    var isTradeRunning = mutableStateOf(false)
+
+    private var orderIdTP: Long = 0
+    private var orderIdSL: Long = 0
+    private var orderIdLIMIT: Long = 0
 
     init {
         callBinanceInfo(isReload = false)
+    }
+
+    private fun checkStatusClose() {
+        viewModelScope.launch {
+            while (isTradeRunning.value) {
+                checkTradeStatusAndClose()
+                delay(2000) // 2Sec
+            }
+        }
+    }
+
+    private fun checkTradeStatusAndClose() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                var isOpenTP = false
+                var isOpenSL = false
+                var isOpenLIMIT = false
+
+                val markParams = LinkedHashMap<String, Any>()
+                markParams["symbol"] = MainActivity.symbol
+                val result: String = futureClient.account().currentAllOpenOrders(markParams)
+                val marketData: List<Order> =
+                    Gson().fromJson(result, Array<Order>::class.java).toList()
+
+                for (order in marketData) {
+                    isOpenTP =
+                        order.type == OrderType.TP.type && order.status == OrderStatus.NEW.name
+                    isOpenSL =
+                        order.type == OrderType.SL.type && order.status == OrderStatus.NEW.name
+                    isOpenLIMIT =
+                        order.type == OrderType.LIMIT.type && order.status == OrderStatus.NEW.name
+                }
+
+                /*
+                * if LIMIT order is done, then close all of open trades
+                * */
+                if (marketData.size == 1) {
+                    //close positions
+                    cancelAllOpenOrders()
+                } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
+                    /*
+                    * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
+                    * if LIMIT FILLED the trade is still running
+                    *
+                    * if LIMIT status is NEW and isOpenTP or isOpenSL both of one status is FILLED, then close all of trades
+                    * */
+
+                    //close positions
+                    cancelAllOpenOrders()
+
+                    if (!isOpenTP) {
+                        cancelTradeOrder(orderIdTP)
+                    }
+
+                    if (!isOpenSL) {
+                        cancelTradeOrder(orderIdSL)
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e("trade status", e.toString())
+            }
+        }
+    }
+
+    private fun cancelAllOpenOrders() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val markParams = LinkedHashMap<String, Any>()
+                markParams["symbol"] = MainActivity.symbol
+                val result: String = futureClient.account().cancelAllOpenOrders(markParams)
+                Log.d("trade status", "CancelAll " + result)
+            } catch (e: Exception) {
+                Log.e("trade status cancelAllOpenOrders", e.toString())
+            }
+
+            isTradeRunning.value = false
+        }
+    }
+
+    private fun cancelTradeOrder(orderId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val markParams = LinkedHashMap<String, Any>()
+                markParams["symbol"] = MainActivity.symbol
+                markParams["orderId"] = orderId
+                val result: String = futureClient.account().cancelOrder(markParams)
+                Log.d("trade status", "CancelTrade " + result)
+            } catch (e: Exception) {
+                Log.e("trade status", e.toString())
+            }
+
+            isTradeRunning.value = false
+        }
     }
 
     fun callBinanceInfo(isReload: Boolean) {
@@ -144,12 +244,12 @@ class MainViewModel : ViewModel() {
                 sBuilder.append(getOrderStatus(resultOrderSL))
                 infoTxt.value = sBuilder.toAnnotatedString().text
 
-            } catch (e: BinanceConnectorException) {
-                sBuilder.append("\n")
-                sBuilder.append(e.message.toString())
-                infoTxt.value = sBuilder.toAnnotatedString().text
-                Log.e("ApiCall: Connect", e.message, e)
-            } catch (e: BinanceClientException) {
+                isTradeRunning.value = true
+                checkStatusClose()
+
+            } catch (e: Exception) {
+                isTradeRunning.value = false
+
                 sBuilder.append("\n")
                 sBuilder.append(e.message.toString())
                 infoTxt.value = sBuilder.toAnnotatedString().text
@@ -160,6 +260,12 @@ class MainViewModel : ViewModel() {
 
     private fun getOrderStatus(result: String): String {
         val orderData = Gson().fromJson(result, Order::class.java)
+
+        when (orderData.type) {
+            OrderType.LIMIT.type -> orderIdLIMIT = orderData.orderId
+            OrderType.TP.type -> orderIdTP = orderData.orderId
+            OrderType.SL.type -> orderIdSL = orderData.orderId
+        }
 
         val price = if (orderData.price == "0.00000") {
             orderData.stopPrice
