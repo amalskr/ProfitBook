@@ -29,6 +29,7 @@ class MainViewModel : ViewModel() {
         UMFuturesClientImpl(PrivateConfig.API_KEY, PrivateConfig.SECRET_KEY)
 
     var showToast = mutableStateOf(Pair(false, ""))
+    var showNotification = mutableStateOf(Pair(false, ""))
     var accountBalance = mutableStateOf("USDT")
     var infoTxt = mutableStateOf("Loading...")
     var isTradeRunning = mutableStateOf(true)
@@ -91,6 +92,7 @@ class MainViewModel : ViewModel() {
                     }
 
                     infoTxt.value = "Trade $tradeCloseStatus!"
+                    showNotification.value = Pair(true, infoTxt.value)
 
                 } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
                     /*
@@ -110,7 +112,9 @@ class MainViewModel : ViewModel() {
                     if (!isOpenSL) {
                         cancelTradeOrder(orderIdSL)
                     }
-                    infoTxt.value = "Invalid Trade closed!"
+                    infoTxt.value = "Invalid Trade closed...!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
                 } else {
                     tradeRunStatus.value = "Trade is running..."
                 }

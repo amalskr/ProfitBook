@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.ceylonapz.profitbook.util.NotificationHelper
 import com.ceylonapz.profitbook.view.MainActivity
 import com.ceylonapz.profitbook.viewmodel.MainViewModel
 
@@ -55,6 +56,7 @@ fun MainScreen(navController: NavHostController) {
 
         val context = LocalContext.current
         showToastMessage(mainVM, context)
+        showNotificationMessage(mainVM, context)
 
         Box(modifier = Modifier.fillMaxSize()) {
             AndroidView(
@@ -157,6 +159,16 @@ fun MainScreen(navController: NavHostController) {
 
             }
         }
+    }
+}
+
+fun showNotificationMessage(mainVM: MainViewModel, context: Context) {
+    if (mainVM.showNotification.value.first) {
+        val notificationHelper = NotificationHelper(context)
+        notificationHelper.showNotification(
+            "ProfitBook Trading",
+            mainVM.showNotification.value.second
+        )
     }
 }
 
