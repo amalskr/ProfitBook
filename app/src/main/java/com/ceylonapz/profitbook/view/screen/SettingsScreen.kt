@@ -5,6 +5,7 @@ package com.ceylonapz.profitbook.view.screen
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -76,6 +77,7 @@ fun FormContent() {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = takeProfitValue,
             onValueChange = { newVal -> takeProfitValue = newVal },
             label = { Text("TakeProfit") },
@@ -83,6 +85,7 @@ fun FormContent() {
         )
 
         OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = stopLossValue,
             onValueChange = { newVal -> stopLossValue = newVal },
             label = { Text("StopLoss") },
@@ -90,6 +93,7 @@ fun FormContent() {
         )
 
         OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = usdtValue,
             onValueChange = { newVal -> usdtValue = newVal },
             label = { Text("USDT") },
