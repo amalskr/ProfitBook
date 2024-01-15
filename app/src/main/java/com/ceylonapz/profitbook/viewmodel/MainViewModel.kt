@@ -26,9 +26,9 @@ class MainViewModel : ViewModel() {
         UMFuturesClientImpl(PrivateConfig.API_KEY, PrivateConfig.SECRET_KEY)
 
     var accountBalance = mutableStateOf("USDT")
-    var infoTxt = mutableStateOf("Loading")
-    var isTradeRunning = mutableStateOf(false)
-    var tradeRunStatus = mutableStateOf("")
+    var infoTxt = mutableStateOf("Loading...")
+    var isTradeRunning = mutableStateOf(true)
+    var tradeRunStatus = mutableStateOf("Checking...")
 
     private var orderIdTP: Long = 0
     private var orderIdSL: Long = 0
@@ -36,6 +36,7 @@ class MainViewModel : ViewModel() {
 
     init {
         callBinanceInfo(isReload = false)
+        checkStatusClose()
     }
 
     private fun checkStatusClose() {
@@ -72,7 +73,9 @@ class MainViewModel : ViewModel() {
                 /*
                 * if LIMIT order is done, then close all of open trades
                 * */
-                if (marketData.size == 1) {
+                if (marketData.isEmpty()) {
+                    isTradeRunning.value = false
+                } else if (marketData.size == 1) {
                     //close positions
                     cancelAllOpenOrders()
                     infoTxt.value = "Trade done & closed!"
