@@ -10,3 +10,9 @@ enum class OrderStatus {
     NEW,
     FILLED
 }
+
+enum class OrderFields {
+    TP,
+    SL,
+    USDT
+}

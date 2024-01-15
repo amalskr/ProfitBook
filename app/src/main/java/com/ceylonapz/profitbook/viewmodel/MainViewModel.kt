@@ -1,5 +1,6 @@
 package com.ceylonapz.profitbook.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.AnnotatedString
@@ -9,9 +10,11 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl
 import com.ceylonapz.profitbook.model.AccountInfo
 import com.ceylonapz.profitbook.model.MarketInfo
 import com.ceylonapz.profitbook.model.Order
+import com.ceylonapz.profitbook.util.OrderFields
 import com.ceylonapz.profitbook.util.OrderStatus
 import com.ceylonapz.profitbook.util.OrderType
 import com.ceylonapz.profitbook.util.PrivateConfig
+import com.ceylonapz.profitbook.util.getLimitOrderValues
 import com.ceylonapz.profitbook.view.MainActivity
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -168,7 +171,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun callBinanceTrade(selectedType: String) {
+    fun callBinanceTrade(selectedType: String, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val sBuilder = AnnotatedString.Builder()
 
@@ -187,11 +190,15 @@ class MainViewModel : ViewModel() {
                     MainActivity.order_buy
                 }
 
+                val orderValues = getLimitOrderValues(context)
 
-                val qty = 10 //ADA 40 = USDT 1
+                val savedTP = orderValues[OrderFields.TP.name]
+                val savedSL = orderValues[OrderFields.SL.name]
+                val qty = getAdaQty(orderValues[OrderFields.USDT.name])
+
                 val endDateTime = System.currentTimeMillis() + 10000
-                val addProfit = BigDecimal("0.0004")
-                val deductLoss = BigDecimal("0.0015")
+                val addProfit = savedTP?.let { BigDecimal(it).divide(BigDecimal(10000)) }
+                val deductLoss = savedSL?.let { BigDecimal(it).divide(BigDecimal(10000)) }
 
                 //GET MARKET PRICE
                 val markParams = LinkedHashMap<String, Any>()
@@ -265,6 +272,18 @@ class MainViewModel : ViewModel() {
                 infoTxt.value = sBuilder.toAnnotatedString().text
                 Log.e("ApiCall: Client", e.message, e)
             }
+        }
+    }
+
+    private fun getAdaQty(usdt: Int?): Int {
+        return if (usdt != null) {
+            if (usdt == 0) {
+                10
+            } else {
+                usdt * 40
+            }
+        } else {
+            10
         }
     }
 

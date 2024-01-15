@@ -225,6 +225,8 @@ fun StatusTextView(mainVm: MainViewModel) {
 @Composable
 fun ActionButton(btnName: String, mainVm: MainViewModel, modifier: Modifier = Modifier) {
 
+    val context = LocalContext.current
+
     val btnColor = if (btnName == MainActivity.order_buy) {
         Color(android.graphics.Color.parseColor("#1B5E20"))
     } else {
@@ -232,7 +234,7 @@ fun ActionButton(btnName: String, mainVm: MainViewModel, modifier: Modifier = Mo
     }
 
     Button(
-        onClick = { mainVm.callBinanceTrade(btnName) },
+        onClick = { mainVm.callBinanceTrade(btnName, context) },
         colors = ButtonDefaults.textButtonColors(
             contentColor = Color.White,
             containerColor = btnColor

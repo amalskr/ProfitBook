@@ -2,6 +2,7 @@
 
 package com.ceylonapz.profitbook.view.screen
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -23,10 +24,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.ceylonapz.profitbook.util.OrderFields
+import com.ceylonapz.profitbook.util.getLimitOrderValues
+import com.ceylonapz.profitbook.util.saveLimitOrderValues
 import com.ceylonapz.profitbook.viewmodel.MainViewModel
 
 @Composable
@@ -58,9 +63,12 @@ fun SettingsScreen(navController: NavHostController) {
 @Composable
 fun FormContent() {
 
-    var takeProfitValue by remember { mutableStateOf("4") }
-    var stopLossValue by remember { mutableStateOf("20") }
-    var usdtValue by remember { mutableStateOf("10") }
+    val context = LocalContext.current
+    val orderValues = getLimitOrderValues(context)
+
+    var takeProfitValue by remember { mutableStateOf(orderValues[OrderFields.TP.name].toString()) }
+    var stopLossValue by remember { mutableStateOf(orderValues[OrderFields.SL.name].toString()) }
+    var usdtValue by remember { mutableStateOf(orderValues[OrderFields.USDT.name].toString()) }
 
 
     Column(
@@ -88,14 +96,13 @@ fun FormContent() {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-
         Button(
             onClick = {
                 val tp = takeProfitValue.toInt()
                 val sl = stopLossValue.toInt()
                 val usdt = usdtValue.toInt()
 
-                saveOrderValues(tp,sl,usdt)
+                saveOrderValues(context, tp, sl, usdt)
             },
             modifier = Modifier.align(Alignment.End)
         ) {
@@ -104,6 +111,11 @@ fun FormContent() {
     }
 }
 
-fun saveOrderValues(tp: Int, sl: Int, usdt: Int) {
-    TODO("Not yet implemented")
+fun saveOrderValues(context: Context, tp: Int, sl: Int, usdt: Int) {
+    val markParams = LinkedHashMap<String, Int>()
+    markParams[OrderFields.TP.name] = tp
+    markParams[OrderFields.SL.name] = sl
+    markParams[OrderFields.USDT.name] = usdt
+
+    saveLimitOrderValues(context, markParams)
 }
