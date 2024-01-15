@@ -1,6 +1,5 @@
-package com.ceylonapz.profitbook
+package com.ceylonapz.profitbook.view
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -44,9 +43,10 @@ import com.binance.connector.futures.client.exceptions.BinanceClientException
 import com.binance.connector.futures.client.exceptions.BinanceConnectorException
 import com.binance.connector.futures.client.impl.UMFuturesClientImpl
 import com.ceylonapz.profitbook.ui.theme.ProfitBookTheme
-import com.ceylonapz.profitbook.util.AccountInfo
-import com.ceylonapz.profitbook.util.MarketInfo
-import com.ceylonapz.profitbook.util.Order
+import com.ceylonapz.profitbook.model.AccountInfo
+import com.ceylonapz.profitbook.model.MarketInfo
+import com.ceylonapz.profitbook.model.Order
+import com.ceylonapz.profitbook.util.PrivateConfig
 import com.google.gson.Gson
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers

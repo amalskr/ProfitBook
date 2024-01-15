@@ -1,4 +1,4 @@
-package com.ceylonapz.profitbook
+package com.ceylonapz.profitbook.util
 
 class PrivateConfig {
     companion object {

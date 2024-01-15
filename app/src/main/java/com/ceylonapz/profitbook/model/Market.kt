@@ -1,4 +1,4 @@
-package com.ceylonapz.profitbook.util
+package com.ceylonapz.profitbook.model
 
 import com.google.gson.annotations.SerializedName
 

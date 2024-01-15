@@ -1,4 +1,4 @@
-package com.ceylonapz.profitbook.util
+package com.ceylonapz.profitbook.model
 
 data class Order(val orderId: Long,
                  val symbol: String,
