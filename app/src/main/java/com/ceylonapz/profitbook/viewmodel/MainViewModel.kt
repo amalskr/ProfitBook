@@ -75,7 +75,7 @@ class MainViewModel : ViewModel() {
                 if (marketData.size == 1) {
                     //close positions
                     cancelAllOpenOrders()
-                    tradeRunStatus.value = "Trade done & closed!"
+                    infoTxt.value = "Trade done & closed!"
                 } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
                     /*
                     * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
@@ -94,7 +94,7 @@ class MainViewModel : ViewModel() {
                     if (!isOpenSL) {
                         cancelTradeOrder(orderIdSL)
                     }
-                    tradeRunStatus.value = "Invalid Trade closed!"
+                    infoTxt.value = "Invalid Trade closed!"
                 } else {
                     tradeRunStatus.value = "Trade is running..."
                 }

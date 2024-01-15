@@ -202,8 +202,8 @@ fun RunningTextView(mainVm: MainViewModel) {
     ) {
         Text(
             text = mainVm.tradeRunStatus.value,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = Color.White
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = Color.Yellow
             ),
             modifier = Modifier.padding(4.dp)
         )
