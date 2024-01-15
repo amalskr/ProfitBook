@@ -28,6 +28,7 @@ class MainViewModel : ViewModel() {
     private var futureClient: UMFuturesClientImpl =
         UMFuturesClientImpl(PrivateConfig.API_KEY, PrivateConfig.SECRET_KEY)
 
+    var showToast = mutableStateOf(Pair(false, ""))
     var accountBalance = mutableStateOf("USDT")
     var infoTxt = mutableStateOf("Loading...")
     var isTradeRunning = mutableStateOf(true)
@@ -164,7 +165,7 @@ class MainViewModel : ViewModel() {
                     val marketData = Gson().fromJson(resultMark, MarketInfo::class.java)
                     val originalBigDecimal = BigDecimal(marketData.markPrice)
                     val entryPrice = originalBigDecimal.setScale(4, RoundingMode.HALF_UP)
-                    infoTxt.value = "ADA/USDT $entryPrice"
+                    infoTxt.value = "ADA-USDT $entryPrice"
                 }
 
                 //get account info
@@ -172,6 +173,8 @@ class MainViewModel : ViewModel() {
                 val usdtBalance =
                     roundWithTwoDecimals(displayUsdtAvailableBalance(result).toDouble())
                 accountBalance.value = "USDT $usdtBalance"
+
+                showToast.value = Pair(true, "Balance Updated...!")
 
             } catch (e: Exception) {
                 infoTxt.value = e.message.toString()

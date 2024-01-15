@@ -6,6 +6,7 @@ import android.net.Uri
 import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,6 +51,10 @@ fun MainScreen(navController: NavHostController) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
+
+
+        val context = LocalContext.current
+        showToastMessage(mainVM, context)
 
         Box(modifier = Modifier.fillMaxSize()) {
             AndroidView(
@@ -109,7 +114,6 @@ fun MainScreen(navController: NavHostController) {
                     StatusTextView(mainVM)
                 }
 
-                val context = LocalContext.current
                 val lightWhite = Color(0xFFF2F2F2)
 
                 //open app button
@@ -153,6 +157,12 @@ fun MainScreen(navController: NavHostController) {
 
             }
         }
+    }
+}
+
+fun showToastMessage(mainVM: MainViewModel, context: Context) {
+    if (mainVM.showToast.value.first) {
+        Toast.makeText(context, mainVM.showToast.value.second, Toast.LENGTH_SHORT).show()
     }
 }
 
