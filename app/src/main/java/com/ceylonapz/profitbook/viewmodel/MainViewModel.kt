@@ -21,7 +21,7 @@ import java.math.RoundingMode
 
 class MainViewModel : ViewModel() {
 
-    private var client: UMFuturesClientImpl =
+    private var futureClient: UMFuturesClientImpl =
         UMFuturesClientImpl(PrivateConfig.API_KEY, PrivateConfig.SECRET_KEY)
 
     var accountBalance = mutableStateOf("USDT")
@@ -38,7 +38,7 @@ class MainViewModel : ViewModel() {
                     //market price
                     val markParams = LinkedHashMap<String, Any>()
                     markParams["symbol"] = MainActivity.symbol
-                    val resultMark: String = client.market().markPrice(markParams)
+                    val resultMark: String = futureClient.market().markPrice(markParams)
                     val marketData = Gson().fromJson(resultMark, MarketInfo::class.java)
                     val originalBigDecimal = BigDecimal(marketData.markPrice)
                     val entryPrice = originalBigDecimal.setScale(4, RoundingMode.HALF_UP)
@@ -46,7 +46,7 @@ class MainViewModel : ViewModel() {
                 }
 
                 //get account info
-                val result: String = client.account().futuresAccountBalance(linkedMapOf())
+                val result: String = futureClient.account().futuresAccountBalance(linkedMapOf())
                 val usdtBalance =
                     roundWithTwoDecimals(displayUsdtAvailableBalance(result).toDouble())
                 accountBalance.value = "USDT $usdtBalance"
@@ -64,9 +64,6 @@ class MainViewModel : ViewModel() {
 
             try {
                 infoTxt.value = "Connecting...."
-
-                val client =
-                    UMFuturesClientImpl(PrivateConfig.API_KEY, PrivateConfig.SECRET_KEY)
 
                 val orderSide = if (selectedType == MainActivity.order_buy) {
                     MainActivity.order_buy
@@ -89,7 +86,7 @@ class MainViewModel : ViewModel() {
                 //GET MARKET PRICE
                 val markParams = LinkedHashMap<String, Any>()
                 markParams["symbol"] = MainActivity.symbol
-                val result: String = client.market().markPrice(markParams)
+                val result: String = futureClient.market().markPrice(markParams)
                 val marketData = Gson().fromJson(result, MarketInfo::class.java)
                 val originalBigDecimal = BigDecimal(marketData.markPrice)
                 val entryPrice = originalBigDecimal.setScale(4, RoundingMode.HALF_UP)
@@ -115,7 +112,7 @@ class MainViewModel : ViewModel() {
                 paramOrder["type"] = "LIMIT"
                 paramOrder["price"] = markPrice
                 paramOrder["timeinforce"] = "GTC"
-                val resultOrder: String = client.account().newOrder(paramOrder)
+                val resultOrder: String = futureClient.account().newOrder(paramOrder)
 
                 //TAKE PROFIT
                 val paramOrderTP = LinkedHashMap<String, Any>()
@@ -126,7 +123,7 @@ class MainViewModel : ViewModel() {
                 paramOrderTP["stopPrice"] = markTP
                 paramOrderTP["timestamp"] = endDateTime
                 paramOrderTP["closePosition"] = true
-                val resultOrderTP: String = client.account().newOrder(paramOrderTP)
+                val resultOrderTP: String = futureClient.account().newOrder(paramOrderTP)
 
                 //STOP LOSS
                 val paramOrderSL = LinkedHashMap<String, Any>()
@@ -137,7 +134,7 @@ class MainViewModel : ViewModel() {
                 paramOrderSL["stopPrice"] = markSL
                 paramOrderSL["timestamp"] = endDateTime
                 paramOrderSL["closePosition"] = true
-                val resultOrderSL: String = client.account().newOrder(paramOrderSL)
+                val resultOrderSL: String = futureClient.account().newOrder(paramOrderSL)
 
                 //PRINT STATUS
                 sBuilder.append(getOrderStatus(resultOrder))
