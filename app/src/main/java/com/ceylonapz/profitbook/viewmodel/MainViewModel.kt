@@ -303,7 +303,7 @@ class MainViewModel : ViewModel() {
         }
 
         val type = getShortFormatType(orderData.origType)
-        return "$type ${orderData.side} ${formatPrice(price.toDouble())}"
+        return "$type ${formatPrice(price.toDouble())}"
     }
 
     private fun formatPrice(number: Double): String {
