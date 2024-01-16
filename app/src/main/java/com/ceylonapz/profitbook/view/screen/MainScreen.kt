@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +48,11 @@ import com.ceylonapz.profitbook.viewmodel.MainViewModel
 fun MainScreen(navController: NavHostController) {
 
     val mainVM: MainViewModel = viewModel()
+
+    LaunchedEffect(key1 = "LoadInitData"){
+        mainVM.callBinanceInfo(isReload = false)
+        mainVM.checkStatusClose()
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),

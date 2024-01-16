@@ -39,12 +39,7 @@ class MainViewModel : ViewModel() {
     private var orderIdSL: Long = 0
     private var orderIdLIMIT: Long = 0
 
-    init {
-        callBinanceInfo(isReload = false)
-        checkStatusClose()
-    }
-
-    private fun checkStatusClose() {
+    fun checkStatusClose() {
         viewModelScope.launch {
             while (isTradeRunning.value) {
                 checkTradeStatusAndClose()
