@@ -178,8 +178,6 @@ class MainViewModel : ViewModel() {
                     roundWithTwoDecimals(displayUsdtAvailableBalance(result).toDouble())
                 accountBalance.value = "USDT $usdtBalance"
 
-                showToast.value = Pair(true, "Balance Updated...!")
-
             } catch (e: Exception) {
                 infoTxt.value = e.message.toString()
                 Log.e("ApiCall: Info", e.message, e)
