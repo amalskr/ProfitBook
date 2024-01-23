@@ -24,3 +24,19 @@ fun getLimitOrderValues(context: Context): LinkedHashMap<String, Int> {
     markParams[OrderFields.USDT.name] = sharedPrefs.getInt(OrderFields.USDT.name, 0)
     return markParams
 }
+
+fun saveScreenLight(context: Context, isAlwaysOn: Boolean) {
+    val sharedPrefs = context.getSharedPreferences("pb_prefs", Context.MODE_PRIVATE)
+
+    with(sharedPrefs.edit()) {
+        putBoolean(General.SCREEN.name, isAlwaysOn)
+        commit()
+    }
+
+    Toast.makeText(context, "Display Saved...!", Toast.LENGTH_SHORT).show()
+}
+
+fun isScreenLightOn(context: Context): Boolean {
+    val sharedPrefs = context.getSharedPreferences("pb_prefs", Context.MODE_PRIVATE)
+    return sharedPrefs.getBoolean(General.SCREEN.name, false)
+}

@@ -16,3 +16,8 @@ enum class OrderFields {
     SL,
     USDT
 }
+
+enum class General {
+    SCREEN
+}
+
