@@ -218,18 +218,6 @@ class MainViewModel : ViewModel() {
                 val entryPrice = originalBigDecimal.setScale(4, RoundingMode.HALF_UP)
                 val markPrice = entryPrice.toString()
 
-                val markTP = if (selectedType == MainActivity.order_buy) {
-                    entryPrice.add(addProfit)
-                } else {
-                    entryPrice.subtract(addProfit)
-                }
-
-                val markSL = if (selectedType == MainActivity.order_buy) {
-                    entryPrice.subtract(deductLoss)
-                } else {
-                    entryPrice.add(deductLoss)
-                }
-
                 //MAKE ORDER
                 val paramOrder = LinkedHashMap<String, Any>()
                 paramOrder["symbol"] = MainActivity.symbol
@@ -241,6 +229,12 @@ class MainViewModel : ViewModel() {
                 val resultOrder: String = futureClient.account().newOrder(paramOrder)
 
                 //TAKE PROFIT
+                val markTP = if (selectedType == MainActivity.order_buy) {
+                    entryPrice.add(addProfit)
+                } else {
+                    entryPrice.subtract(addProfit)
+                }
+
                 val paramOrderTP = LinkedHashMap<String, Any>()
                 paramOrderTP["symbol"] = MainActivity.symbol
                 paramOrderTP["side"] = orderReversSide
@@ -252,15 +246,26 @@ class MainViewModel : ViewModel() {
                 val resultOrderTP: String = futureClient.account().newOrder(paramOrderTP)
 
                 //STOP LOSS
-                val paramOrderSL = LinkedHashMap<String, Any>()
-                paramOrderSL["symbol"] = MainActivity.symbol
-                paramOrderSL["side"] = orderReversSide
-                paramOrderSL["type"] = "STOP_MARKET"
-                paramOrderSL["quantity"] = qty
-                paramOrderSL["stopPrice"] = markSL
-                paramOrderSL["timestamp"] = endDateTime
-                paramOrderSL["closePosition"] = true
-                val resultOrderSL: String = futureClient.account().newOrder(paramOrderSL)
+                var resultOrderSL  = "NO SL"
+
+                if (savedSL != null && savedSL > 0) {
+
+                    val markSL = if (selectedType == MainActivity.order_buy) {
+                        entryPrice.subtract(deductLoss)
+                    } else {
+                        entryPrice.add(deductLoss)
+                    }
+
+                    val paramOrderSL = LinkedHashMap<String, Any>()
+                    paramOrderSL["symbol"] = MainActivity.symbol
+                    paramOrderSL["side"] = orderReversSide
+                    paramOrderSL["type"] = "STOP_MARKET"
+                    paramOrderSL["quantity"] = qty
+                    paramOrderSL["stopPrice"] = markSL
+                    paramOrderSL["timestamp"] = endDateTime
+                    paramOrderSL["closePosition"] = true
+                    resultOrderSL = futureClient.account().newOrder(paramOrderSL)
+                }
 
                 //PRINT STATUS
                 sBuilder.append(getOrderStatus(resultOrder))
