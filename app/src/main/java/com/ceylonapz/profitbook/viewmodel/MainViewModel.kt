@@ -104,9 +104,10 @@ class MainViewModel : ViewModel() {
                         cancelTradeOrder(orderIdTP)
                     }
 
-                    if (!isOpenSL) {
+                    /*if (!isOpenSL) {
                         cancelTradeOrder(orderIdSL)
-                    }
+                    }*/
+
                     infoTxt.value = "Invalid Trade closed...!"
                     showNotification.value = Pair(true, infoTxt.value)
 
