@@ -10,6 +10,7 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl
 import com.ceylonapz.profitbook.model.AccountInfo
 import com.ceylonapz.profitbook.model.MarketInfo
 import com.ceylonapz.profitbook.model.Order
+import com.ceylonapz.profitbook.model.TradingPosition
 import com.ceylonapz.profitbook.util.OrderFields
 import com.ceylonapz.profitbook.util.OrderStatus
 import com.ceylonapz.profitbook.util.OrderType
@@ -57,62 +58,87 @@ class MainViewModel : ViewModel() {
 
                 val markParams = LinkedHashMap<String, Any>()
                 markParams["symbol"] = MainActivity.symbol
-                val result: String = futureClient.account().currentAllOpenOrders(markParams)
-                val marketData: List<Order> =
-                    Gson().fromJson(result, Array<Order>::class.java).toList()
 
-                for (order in marketData) {
-                    isOpenTP =
-                        order.type == OrderType.TP.type && order.status == OrderStatus.NEW.name
-                    isOpenSL =
-                        order.type == OrderType.SL.type && order.status == OrderStatus.NEW.name
-                    isOpenLIMIT =
-                        order.type == OrderType.LIMIT.type && order.status == OrderStatus.NEW.name
-                }
+                val resultPos: String = futureClient.account().positionInformation(markParams)
+                val positionData = Gson().fromJson(resultPos, Array<TradingPosition>::class.java)[0]
 
-                /*
-                * if LIMIT order is done, then close all of open trades
-                * */
-                if (marketData.isEmpty()) {
+                if (positionData.entryPrice == "0.0" && positionData.positionAmt == "0") {
+                    cancelAllOpenOrders()
                     isTradeRunning.value = false
-                } else if (marketData.size == 1) {
-                    //close positions
-                    cancelAllOpenOrders()
-                    val tradeCloseStatus = if (isOpenTP) {
-                        "Loss"
-                    } else if (isOpenSL) {
-                        "Profit"
-                    } else {
-                        ""
-                    }
-
-                    infoTxt.value = "Trade $tradeCloseStatus!"
-                    showNotification.value = Pair(true, infoTxt.value)
-
-                } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
-                    /*
-                    * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
-                    * if LIMIT FILLED the trade is still running
-                    *
-                    * if LIMIT status is NEW and isOpenTP or isOpenSL both of one status is FILLED, then close all of trades
-                    * */
-
-                    //close positions
-                    cancelAllOpenOrders()
-
-                    if (!isOpenTP) {
-                        cancelTradeOrder(orderIdTP)
-                    }
-
-                    /*if (!isOpenSL) {
-                        cancelTradeOrder(orderIdSL)
-                    }*/
-
-                    infoTxt.value = "Invalid Trade closed...!"
-                    showNotification.value = Pair(true, infoTxt.value)
-
                 } else {
-                    tradeRunStatus.value = "Trade is running..."
+                    val result: String = futureClient.account().currentAllOpenOrders(markParams)
+                    val marketData: List<Order> =
+                        Gson().fromJson(result, Array<Order>::class.java).toList()
+
+                    for (order in marketData) {
+                        isOpenTP =
+                            order.type == OrderType.TP.type && order.status == OrderStatus.NEW.name
+                        isOpenSL =
+                            order.type == OrderType.SL.type && order.status == OrderStatus.NEW.name
+                        isOpenLIMIT =
+                            order.type == OrderType.LIMIT.type && order.status == OrderStatus.NEW.name
+                    }
+
+                    /*
+                    * if LIMIT order is done, then close all of open trades
+                    * */
+                    if (marketData.isEmpty()) {
+
+                        val tradeCloseStatus = if (isOpenTP) {
+                            cancelAllOpenOrders()
+                            "Loss"
+                        } else if (isOpenSL) {
+                            cancelAllOpenOrders()
+                            "Profit"
+                        } else {
+                            "Ready for new Trade"
+                        }
+
+                        if (!tradeCloseStatus.startsWith("Ready ")) {
+                            infoTxt.value = "Trade $tradeCloseStatus!"
+                            showNotification.value = Pair(true, infoTxt.value)
+                        }
+
+                        isTradeRunning.value = false
+
+                    } else if (marketData.size == 2 && isOpenLIMIT) {
+                        infoTxt.value = "Trade is not open Yet..!"
+                        showNotification.value = Pair(true, infoTxt.value)
+                    } else if (marketData.size == 1 && isOpenLIMIT) {
+
+                        /*
+                        * if marketData.size = 1 and its only LIMIT type order then closeAllOpenOrders
+                        * */
+
+                        cancelAllOpenOrders()
+                        infoTxt.value = "TP Opened so Trade closed...!"
+                        showNotification.value = Pair(true, infoTxt.value)
+
+                    } else if (isOpenLIMIT && !isOpenTP) {
+
+                        /*  if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
+                         * if LIMIT FILLED the trade is still running
+                         *
+                         * if LIMIT status is NEW and isOpenTP or isOpenSL both of one status is FILLED, then close all of trades
+                         * */
+
+                        //close positions
+                        cancelAllOpenOrders()
+
+                        if (!isOpenTP) {
+                            cancelTradeOrder(orderIdTP)
+                        }
+
+                        if (!isOpenSL) {
+                            cancelTradeOrder(orderIdSL)
+                        }
+
+                        infoTxt.value = "Invalid Trade closed...!"
+                        showNotification.value = Pair(true, infoTxt.value)
+
+                    } else {
+                        tradeRunStatus.value = "Trade is running..."
+                    }
                 }
 
             } catch (e: Exception) {
@@ -247,7 +273,7 @@ class MainViewModel : ViewModel() {
                 val resultOrderTP: String = futureClient.account().newOrder(paramOrderTP)
 
                 //STOP LOSS
-                var resultOrderSL  = "NO SL"
+                var resultOrderSL = "NO SL"
 
                 if (savedSL != null && savedSL > 0) {
 
@@ -272,8 +298,10 @@ class MainViewModel : ViewModel() {
                 sBuilder.append(getOrderStatus(resultOrder))
                 sBuilder.append(" | ")
                 sBuilder.append(getOrderStatus(resultOrderTP))
-                sBuilder.append("\n")
-                sBuilder.append(getOrderStatus(resultOrderSL))
+                if (savedSL != null && savedSL > 0) {
+                    sBuilder.append("\n")
+                    sBuilder.append(getOrderStatus(resultOrderSL))
+                }
                 infoTxt.value = sBuilder.toAnnotatedString().text
 
                 isTradeRunning.value = true
