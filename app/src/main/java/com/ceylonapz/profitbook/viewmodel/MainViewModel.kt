@@ -352,6 +352,7 @@ class MainViewModel : ViewModel() {
 
     private fun getOrderStatus(result: String): String {
         val orderData = Gson().fromJson(result, Order::class.java)
+        println("orderData "+orderData)
 
         when (orderData.type) {
             OrderType.LIMIT.type -> orderIdLIMIT = orderData.orderId
@@ -365,7 +366,7 @@ class MainViewModel : ViewModel() {
             orderData.price
         }
 
-        val type = getShortFormatType(orderData.origType)
+        val type = getShortFormatType(orderData.origType, orderData.side)
         return "$type ${formatPrice(price.toDouble())}"
     }
 
@@ -373,7 +374,7 @@ class MainViewModel : ViewModel() {
         return String.format("%.4f", number)
     }
 
-    private fun getShortFormatType(type: String): String {
+    private fun getShortFormatType(type: String, side: String): String {
         return if (type.contains("_")) {
             val words = type.split("_")
             when (val shortType = words.joinToString("") { it.first().uppercase() }) {
@@ -382,7 +383,7 @@ class MainViewModel : ViewModel() {
                 else -> shortType
             }
         } else {
-            type
+            side
         }
     }
 
