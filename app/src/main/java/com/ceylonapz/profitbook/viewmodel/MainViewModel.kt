@@ -59,10 +59,6 @@ class MainViewModel : ViewModel() {
                 val markParams = LinkedHashMap<String, Any>()
                 markParams["symbol"] = MainActivity.symbol
 
-                //running orders
-                val resultPos: String = futureClient.account().positionInformation(markParams)
-                val positionData = Gson().fromJson(resultPos, Array<TradingPosition>::class.java)[0]
-
                 //opening orders
                 val result: String = futureClient.account().currentAllOpenOrders(markParams)
                 val marketData: List<Order> =
@@ -77,6 +73,22 @@ class MainViewModel : ViewModel() {
                         order.type == OrderType.LIMIT.type && order.status == OrderStatus.NEW.name
                 }
 
+                //display profit/loss notification
+                if (marketData.size == 1) {
+                    val tradeCloseStatus = if (isOpenTP) {
+                        "Loss"
+                    } else if (isOpenSL) {
+                        "Profit"
+                    } else {
+                        "All Done!"
+                    }
+
+                    infoTxt.value = "Trade $tradeCloseStatus!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
+                }
 
                 // THIS IS A RUNNING TRADE
                 if (marketData.isEmpty()) {
@@ -85,40 +97,27 @@ class MainViewModel : ViewModel() {
                     * */
                     cancelAllOpenOrders()
                     isTradeRunning.value = false
-                } else if (marketData.size == 1) {
-                    //display profit/loss notification
-
-                    val tradeCloseStatus = if (isOpenTP) {
-                        "Loss B"
-                    } else if (isOpenSL) {
-                        "Profit B"
-                    } else {
-                        "All Done! B"
-                    }
-
-                    infoTxt.value = "Trade $tradeCloseStatus!"
-                    showNotification.value = Pair(true, infoTxt.value)
-                } else if (marketData.size == 3 && isOpenLIMIT) {
+                }  else if (marketData.size == 3 && isOpenLIMIT) {
                     /*
                     * stop all trades if running order = true and if having LIMIT order
                     * It's not open yet
                     * */
+                    infoTxt.value = "Order has not started. Closed All!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
                     cancelAllOpenOrders()
                     isTradeRunning.value = false
-
-                    infoTxt.value = "LIMIT order has not started. Closed All!"
-                    showNotification.value = Pair(true, infoTxt.value)
 
                 } else if (marketData.size == 2 && isOpenLIMIT) {
                     /*
                     * stop all trades if running order = true and marketData has two items and
                     * if having LIMIT order
                     * */
-                    cancelAllOpenOrders()
-                    isTradeRunning.value = false
-
                     infoTxt.value = "Open a wrong trade, Closed All!"
                     showNotification.value = Pair(true, infoTxt.value)
+
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
 
                 } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
                     /*
@@ -147,6 +146,11 @@ class MainViewModel : ViewModel() {
 
 
                 //TRADES RUN COMPLETED
+                /*
+                //running orders
+                val resultPos: String = futureClient.account().positionInformation(markParams)
+                val positionData = Gson().fromJson(resultPos, Array<TradingPosition>::class.java)[0]
+
                 if (positionData.positionAmt == 0) {
                     //display profit/loss notification
                     if (marketData.size == 1) {
@@ -165,7 +169,7 @@ class MainViewModel : ViewModel() {
                     cancelAllOpenOrders()
                     isTradeRunning.value = false
 
-                }
+                }*/
 
             } catch (e: Exception) {
                 tradeRunStatus.value = "Error " + e.message
