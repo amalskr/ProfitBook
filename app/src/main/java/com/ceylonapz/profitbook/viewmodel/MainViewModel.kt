@@ -59,86 +59,112 @@ class MainViewModel : ViewModel() {
                 val markParams = LinkedHashMap<String, Any>()
                 markParams["symbol"] = MainActivity.symbol
 
+                //running orders
                 val resultPos: String = futureClient.account().positionInformation(markParams)
                 val positionData = Gson().fromJson(resultPos, Array<TradingPosition>::class.java)[0]
 
-                if (positionData.entryPrice == "0.0" && positionData.positionAmt == "0") {
-                    cancelAllOpenOrders()
-                    isTradeRunning.value = false
-                } else {
-                    val result: String = futureClient.account().currentAllOpenOrders(markParams)
-                    val marketData: List<Order> =
-                        Gson().fromJson(result, Array<Order>::class.java).toList()
+                //opening orders
+                val result: String = futureClient.account().currentAllOpenOrders(markParams)
+                val marketData: List<Order> =
+                    Gson().fromJson(result, Array<Order>::class.java).toList()
 
-                    for (order in marketData) {
-                        isOpenTP =
-                            order.type == OrderType.TP.type && order.status == OrderStatus.NEW.name
-                        isOpenSL =
-                            order.type == OrderType.SL.type && order.status == OrderStatus.NEW.name
-                        isOpenLIMIT =
-                            order.type == OrderType.LIMIT.type && order.status == OrderStatus.NEW.name
-                    }
+                for (order in marketData) {
+                    isOpenTP =
+                        order.type == OrderType.TP.type && order.status == OrderStatus.NEW.name
+                    isOpenSL =
+                        order.type == OrderType.SL.type && order.status == OrderStatus.NEW.name
+                    isOpenLIMIT =
+                        order.type == OrderType.LIMIT.type && order.status == OrderStatus.NEW.name
+                }
 
+
+                // THIS IS A RUNNING TRADE
+                if (marketData.isEmpty()) {
                     /*
                     * if LIMIT order is done, then close all of open trades
                     * */
-                    if (marketData.isEmpty()) {
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
+                } else if (marketData.size == 1) {
+                    //display profit/loss notification
 
-                        val tradeCloseStatus = if (isOpenTP) {
-                            cancelAllOpenOrders()
-                            "Loss"
-                        } else if (isOpenSL) {
-                            cancelAllOpenOrders()
-                            "Profit"
-                        } else {
-                            "Ready for new Trade"
-                        }
-
-                        if (!tradeCloseStatus.startsWith("Ready ")) {
-                            infoTxt.value = "Trade $tradeCloseStatus!"
-                            showNotification.value = Pair(true, infoTxt.value)
-                        }
-
-                        isTradeRunning.value = false
-
-                    } else if (marketData.size == 2 && isOpenLIMIT) {
-                        infoTxt.value = "Trade is not open Yet..!"
-                        showNotification.value = Pair(true, infoTxt.value)
-                    } else if (marketData.size == 1 && isOpenLIMIT) {
-
-                        /*
-                        * if marketData.size = 1 and its only LIMIT type order then closeAllOpenOrders
-                        * */
-
-                        cancelAllOpenOrders()
-                        infoTxt.value = "TP Opened so Trade closed...!"
-                        showNotification.value = Pair(true, infoTxt.value)
-
-                    } else if (isOpenLIMIT && !isOpenTP) {
-
-                        /*  if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
-                         * if LIMIT FILLED the trade is still running
-                         *
-                         * if LIMIT status is NEW and isOpenTP or isOpenSL both of one status is FILLED, then close all of trades
-                         * */
-
-                        //close positions
-                        cancelAllOpenOrders()
-
-                        if (!isOpenTP) {
-                            cancelTradeOrder(orderIdTP)
-                        }
-
-                        if (!isOpenSL) {
-                            cancelTradeOrder(orderIdSL)
-                        }
-
-                        infoTxt.value = "Invalid Trade closed...!"
-                        showNotification.value = Pair(true, infoTxt.value)
-
+                    val tradeCloseStatus = if (isOpenTP) {
+                        "Loss B"
+                    } else if (isOpenSL) {
+                        "Profit B"
                     } else {
-                        tradeRunStatus.value = "Trade is running..."
+                        "All Done! B"
                     }
+
+                    infoTxt.value = "Trade $tradeCloseStatus!"
+                    showNotification.value = Pair(true, infoTxt.value)
+                } else if (marketData.size == 3 && isOpenLIMIT) {
+                    /*
+                    * stop all trades if running order = true and if having LIMIT order
+                    * It's not open yet
+                    * */
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
+
+                    infoTxt.value = "LIMIT order has not started. Closed All!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
+                } else if (marketData.size == 2 && isOpenLIMIT) {
+                    /*
+                    * stop all trades if running order = true and marketData has two items and
+                    * if having LIMIT order
+                    * */
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
+
+                    infoTxt.value = "Open a wrong trade, Closed All!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
+                } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
+                    /*
+                    * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
+                    * if LIMIT FILLED the trade is still running
+                    *
+                    * if LIMIT status is NEW and isOpenTP or isOpenSL both of one status is FILLED, then close all of trades
+                    * */
+
+                    //close positions
+                    cancelAllOpenOrders()
+
+                    if (!isOpenTP) {
+                        cancelTradeOrder(orderIdTP)
+                    }
+
+                    if (!isOpenSL) {
+                        cancelTradeOrder(orderIdSL)
+                    }
+                    infoTxt.value = "Invalid Trade closed...!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
+                } else {
+                    tradeRunStatus.value = "Trade is running..."
+                }
+
+
+                //TRADES RUN COMPLETED
+                if (positionData.positionAmt == 0) {
+                    //display profit/loss notification
+                    if (marketData.size == 1) {
+                        val tradeCloseStatus = if (isOpenTP) {
+                            "Loss A"
+                        } else if (isOpenSL) {
+                            "Profit A"
+                        } else {
+                            "All Done A!"
+                        }
+
+                        infoTxt.value = "Trade $tradeCloseStatus!"
+                        showNotification.value = Pair(true, infoTxt.value)
+                    }
+
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
+
                 }
 
             } catch (e: Exception) {
@@ -245,6 +271,18 @@ class MainViewModel : ViewModel() {
                 val entryPrice = originalBigDecimal.setScale(4, RoundingMode.HALF_UP)
                 val markPrice = entryPrice.toString()
 
+                val markTP = if (selectedType == MainActivity.order_buy) {
+                    entryPrice.add(addProfit)
+                } else {
+                    entryPrice.subtract(addProfit)
+                }
+
+                val markSL = if (selectedType == MainActivity.order_buy) {
+                    entryPrice.subtract(deductLoss)
+                } else {
+                    entryPrice.add(deductLoss)
+                }
+
                 //MAKE ORDER
                 val paramOrder = LinkedHashMap<String, Any>()
                 paramOrder["symbol"] = MainActivity.symbol
@@ -256,12 +294,6 @@ class MainViewModel : ViewModel() {
                 val resultOrder: String = futureClient.account().newOrder(paramOrder)
 
                 //TAKE PROFIT
-                val markTP = if (selectedType == MainActivity.order_buy) {
-                    entryPrice.add(addProfit)
-                } else {
-                    entryPrice.subtract(addProfit)
-                }
-
                 val paramOrderTP = LinkedHashMap<String, Any>()
                 paramOrderTP["symbol"] = MainActivity.symbol
                 paramOrderTP["side"] = orderReversSide
@@ -273,35 +305,22 @@ class MainViewModel : ViewModel() {
                 val resultOrderTP: String = futureClient.account().newOrder(paramOrderTP)
 
                 //STOP LOSS
-                var resultOrderSL = "NO SL"
-
-                if (savedSL != null && savedSL > 0) {
-
-                    val markSL = if (selectedType == MainActivity.order_buy) {
-                        entryPrice.subtract(deductLoss)
-                    } else {
-                        entryPrice.add(deductLoss)
-                    }
-
-                    val paramOrderSL = LinkedHashMap<String, Any>()
-                    paramOrderSL["symbol"] = MainActivity.symbol
-                    paramOrderSL["side"] = orderReversSide
-                    paramOrderSL["type"] = "STOP_MARKET"
-                    paramOrderSL["quantity"] = qty
-                    paramOrderSL["stopPrice"] = markSL
-                    paramOrderSL["timestamp"] = endDateTime
-                    paramOrderSL["closePosition"] = true
-                    resultOrderSL = futureClient.account().newOrder(paramOrderSL)
-                }
+                val paramOrderSL = LinkedHashMap<String, Any>()
+                paramOrderSL["symbol"] = MainActivity.symbol
+                paramOrderSL["side"] = orderReversSide
+                paramOrderSL["type"] = "STOP_MARKET"
+                paramOrderSL["quantity"] = qty
+                paramOrderSL["stopPrice"] = markSL
+                paramOrderSL["timestamp"] = endDateTime
+                paramOrderSL["closePosition"] = true
+                val resultOrderSL: String = futureClient.account().newOrder(paramOrderSL)
 
                 //PRINT STATUS
                 sBuilder.append(getOrderStatus(resultOrder))
                 sBuilder.append(" | ")
                 sBuilder.append(getOrderStatus(resultOrderTP))
-                if (savedSL != null && savedSL > 0) {
-                    sBuilder.append("\n")
-                    sBuilder.append(getOrderStatus(resultOrderSL))
-                }
+                sBuilder.append("\n")
+                sBuilder.append(getOrderStatus(resultOrderSL))
                 infoTxt.value = sBuilder.toAnnotatedString().text
 
                 isTradeRunning.value = true
@@ -345,7 +364,7 @@ class MainViewModel : ViewModel() {
             orderData.price
         }
 
-        val type = getShortFormatType(orderData.origType)
+        val type = getShortFormatType(orderData.origType, orderData.side)
         return "$type ${formatPrice(price.toDouble())}"
     }
 
@@ -353,7 +372,7 @@ class MainViewModel : ViewModel() {
         return String.format("%.4f", number)
     }
 
-    private fun getShortFormatType(type: String): String {
+    private fun getShortFormatType(type: String, side: String): String {
         return if (type.contains("_")) {
             val words = type.split("_")
             when (val shortType = words.joinToString("") { it.first().uppercase() }) {
@@ -362,7 +381,7 @@ class MainViewModel : ViewModel() {
                 else -> shortType
             }
         } else {
-            type
+            side
         }
     }
 

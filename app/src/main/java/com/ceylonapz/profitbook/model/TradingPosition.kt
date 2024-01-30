@@ -2,8 +2,8 @@ package com.ceylonapz.profitbook.model
 
 data class TradingPosition(
     val symbol: String,
-    val positionAmt: String,
-    val entryPrice: String,
+    val positionAmt: Int,
+    val entryPrice: Double,
     val breakEvenPrice: String,
     val markPrice: String,
     val unRealizedProfit: String,
@@ -20,4 +20,3 @@ data class TradingPosition(
     val isolated: Boolean,
     val adlQuantile: Int
 )
-
