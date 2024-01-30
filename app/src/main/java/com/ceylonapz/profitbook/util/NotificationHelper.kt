@@ -3,15 +3,18 @@ package com.ceylonapz.profitbook.util
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.ceylonapz.profitbook.R
+import com.ceylonapz.profitbook.view.MainActivity
 
 class NotificationHelper(private val context: Context) {
 
@@ -45,6 +48,14 @@ class NotificationHelper(private val context: Context) {
     }
 
     fun showNotification(title: String, content: String) {
+        val intent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_bitcoin)
             .setContentTitle(title)
@@ -53,9 +64,10 @@ class NotificationHelper(private val context: Context) {
             .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
             .setSound(getDefaultNotificationSound())
             .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
 
         with(NotificationManagerCompat.from(context)) {
-            if (ActivityCompat.checkSelfPermission(
+            if (ContextCompat.checkSelfPermission(
                     context,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
