@@ -78,7 +78,6 @@ fun GeneralContent() {
 
     val context = LocalContext.current
     var keepScreenOn by remember { mutableStateOf(isScreenLightOn(context)) }
-    KeepScreenOnOff(keepScreenOn)
     saveScreenLight(context, keepScreenOn)
 
     Column(

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.Toast
@@ -30,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +43,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.ceylonapz.profitbook.util.NotificationHelper
+import com.ceylonapz.profitbook.util.findActivity
+import com.ceylonapz.profitbook.util.isScreenLightOn
 import com.ceylonapz.profitbook.view.MainActivity
 import com.ceylonapz.profitbook.viewmodel.MainViewModel
 
@@ -49,7 +53,7 @@ fun MainScreen(navController: NavHostController) {
 
     val mainVM: MainViewModel = viewModel()
 
-    LaunchedEffect(key1 = "LoadInitData"){
+    LaunchedEffect(key1 = "LoadInitData") {
         mainVM.callBinanceInfo(isReload = false)
         mainVM.checkStatusClose()
     }
@@ -58,11 +62,10 @@ fun MainScreen(navController: NavHostController) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-
-
         val context = LocalContext.current
         showToastMessage(mainVM, context)
         showNotificationMessage(mainVM, context)
+        KeepScreenOn(isScreenLightOn(context))
 
         Box(modifier = Modifier.fillMaxSize()) {
             AndroidView(
@@ -273,4 +276,20 @@ fun ActionButton(btnName: String, mainVm: MainViewModel, modifier: Modifier = Mo
             modifier = modifier
         )
     }
+}
+
+@Composable
+fun KeepScreenOn(isKeepOn: Boolean) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val window = context.findActivity()?.window
+        if (isKeepOn) {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+
 }
