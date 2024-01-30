@@ -77,9 +77,77 @@ class MainViewModel : ViewModel() {
                         order.type == OrderType.LIMIT.type && order.status == OrderStatus.NEW.name
                 }
 
-                if (positionData.positionAmt == 0) {
-                    //TRADES RUN COMPLETED
 
+                // THIS IS A RUNNING TRADE
+                if (marketData.isEmpty()) {
+                    /*
+                    * if LIMIT order is done, then close all of open trades
+                    * */
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
+                } else if (marketData.size == 1) {
+                    //display profit/loss notification
+
+                    val tradeCloseStatus = if (isOpenTP) {
+                        "Loss B"
+                    } else if (isOpenSL) {
+                        "Profit B"
+                    } else {
+                        "All Done! B"
+                    }
+
+                    infoTxt.value = "Trade $tradeCloseStatus!"
+                    showNotification.value = Pair(true, infoTxt.value)
+                } else if (marketData.size == 3 && isOpenLIMIT) {
+                    /*
+                    * stop all trades if running order = true and if having LIMIT order
+                    * It's not open yet
+                    * */
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
+
+                    infoTxt.value = "LIMIT order has not started. Closed All!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
+                } else if (marketData.size == 2 && isOpenLIMIT) {
+                    /*
+                    * stop all trades if running order = true and marketData has two items and
+                    * if having LIMIT order
+                    * */
+                    cancelAllOpenOrders()
+                    isTradeRunning.value = false
+
+                    infoTxt.value = "Open a wrong trade, Closed All!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
+                } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
+                    /*
+                    * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
+                    * if LIMIT FILLED the trade is still running
+                    *
+                    * if LIMIT status is NEW and isOpenTP or isOpenSL both of one status is FILLED, then close all of trades
+                    * */
+
+                    //close positions
+                    cancelAllOpenOrders()
+
+                    if (!isOpenTP) {
+                        cancelTradeOrder(orderIdTP)
+                    }
+
+                    if (!isOpenSL) {
+                        cancelTradeOrder(orderIdSL)
+                    }
+                    infoTxt.value = "Invalid Trade closed...!"
+                    showNotification.value = Pair(true, infoTxt.value)
+
+                } else {
+                    tradeRunStatus.value = "Trade is running..."
+                }
+
+
+                //TRADES RUN COMPLETED
+                if (positionData.positionAmt == 0) {
                     //display profit/loss notification
                     if (marketData.size == 1) {
                         val tradeCloseStatus = if (isOpenTP) {
@@ -96,75 +164,6 @@ class MainViewModel : ViewModel() {
 
                     cancelAllOpenOrders()
                     isTradeRunning.value = false
-
-                } else {
-                    // THIS IS A RUNNING TRADE
-
-                    if (marketData.isEmpty()) {
-                        /*
-                        * if LIMIT order is done, then close all of open trades
-                        * */
-                        cancelAllOpenOrders()
-                        isTradeRunning.value = false
-                    } else if (marketData.size == 1) {
-                        //display profit/loss notification
-
-                        val tradeCloseStatus = if (isOpenTP) {
-                            "Loss B"
-                        } else if (isOpenSL) {
-                            "Profit B"
-                        } else {
-                            "All Done! B"
-                        }
-
-                        infoTxt.value = "Trade $tradeCloseStatus!"
-                        showNotification.value = Pair(true, infoTxt.value)
-                    } else if (marketData.size == 3 && isOpenLIMIT) {
-                        /*
-                        * stop all trades if running order = true and if having LIMIT order
-                        * It's not open yet
-                        * */
-                        cancelAllOpenOrders()
-                        isTradeRunning.value = false
-
-                        infoTxt.value = "LIMIT order has not started. Closed All!"
-                        showNotification.value = Pair(true, infoTxt.value)
-
-                    } else if (marketData.size == 2 && isOpenLIMIT) {
-                        /*
-                        * stop all trades if running order = true and marketData has two items and
-                        * if having LIMIT order
-                        * */
-                        cancelAllOpenOrders()
-                        isTradeRunning.value = false
-
-                        infoTxt.value = "Open a wrong trade, Closed All!"
-                        showNotification.value = Pair(true, infoTxt.value)
-
-                    } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
-                        /*
-                        * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
-                        * if LIMIT FILLED the trade is still running
-                        *
-                        * if LIMIT status is NEW and isOpenTP or isOpenSL both of one status is FILLED, then close all of trades
-                        * */
-
-                        //close positions
-                        cancelAllOpenOrders()
-
-                        if (!isOpenTP) {
-                            cancelTradeOrder(orderIdTP)
-                        }
-
-                        if (!isOpenSL) {
-                            cancelTradeOrder(orderIdSL)
-                        }
-                        infoTxt.value = "Invalid Trade closed...!"
-                        showNotification.value = Pair(true, infoTxt.value)
-
-                    } else {
-                        tradeRunStatus.value = "Trade is running..."
-                    }
 
                 }
 
@@ -352,7 +351,6 @@ class MainViewModel : ViewModel() {
 
     private fun getOrderStatus(result: String): String {
         val orderData = Gson().fromJson(result, Order::class.java)
-        println("orderData "+orderData)
 
         when (orderData.type) {
             OrderType.LIMIT.type -> orderIdLIMIT = orderData.orderId
