@@ -159,6 +159,19 @@ fun MainScreen(navController: NavHostController) {
                             )
                         }
 
+                        //TradingView button
+                        IconButton(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart),
+                            onClick = { openTradingView(context) }
+                        ) {
+                            Icon(
+                                Icons.Filled.ShoppingCart,
+                                tint = lightWhite,
+                                contentDescription = "Open TradingView"
+                            )
+                        }
+
                         //refresh button
                         IconButton(
                             modifier = Modifier
@@ -235,6 +248,19 @@ private fun openBinance(context: Context) {
     } else {
         val webIntent =
             Intent(Intent.ACTION_VIEW, Uri.parse("https://www.binance.com/en/futures"))
+        context.startActivity(webIntent)
+    }
+}
+
+private fun openTradingView(context: Context) {
+    val pkgName = "com.tradingview.tradingviewapp"
+    val intent = context.packageManager.getLaunchIntentForPackage(pkgName)
+
+    if (intent != null) {
+        context.startActivity(intent)
+    } else {
+        val webIntent =
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tradingview.com/chart/WjTArldm/"))
         context.startActivity(webIntent)
     }
 }
