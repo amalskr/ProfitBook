@@ -73,23 +73,6 @@ class MainViewModel : ViewModel() {
                         order.type == OrderType.LIMIT.type && order.status == OrderStatus.NEW.name
                 }
 
-                //display profit/loss notification
-                if (marketData.size == 1) {
-                    val tradeCloseStatus = if (isOpenTP) {
-                        "Loss"
-                    } else if (isOpenSL) {
-                        "Profit"
-                    } else {
-                        "All Done!"
-                    }
-
-                    infoTxt.value = "Trade $tradeCloseStatus!"
-                    showNotification.value = Pair(true, infoTxt.value)
-
-                    cancelAllOpenOrders()
-                    isTradeRunning.value = false
-                }
-
                 // THIS IS A RUNNING TRADE
                 if (marketData.isEmpty()) {
                     /*
@@ -97,7 +80,7 @@ class MainViewModel : ViewModel() {
                     * */
                     cancelAllOpenOrders()
                     isTradeRunning.value = false
-                }  else if (marketData.size == 3 && isOpenLIMIT) {
+                } else if (marketData.size == 3 && isOpenLIMIT) {
                     /*
                     * stop all trades if running order = true and if having LIMIT order
                     * It's not open yet
@@ -119,6 +102,32 @@ class MainViewModel : ViewModel() {
                     cancelAllOpenOrders()
                     isTradeRunning.value = false
 
+                } else if (marketData.size == 1) {
+
+                    //check is running orders
+                    val resultPos: String = futureClient.account().positionInformation(markParams)
+                    val positionData =
+                        Gson().fromJson(resultPos, Array<TradingPosition>::class.java)[0]
+
+                    if (positionData.positionAmt == 0) {
+                        /*
+                        * no runing orders so need to display profit/loss notification
+                        * */
+                        val tradeCloseStatus = if (isOpenTP) {
+                            "Loss"
+                        } else if (isOpenSL) {
+                            "Profit"
+                        } else {
+                            "All Done!"
+                        }
+
+                        infoTxt.value = "Trade $tradeCloseStatus!"
+                        showNotification.value = Pair(true, infoTxt.value)
+
+                        cancelAllOpenOrders()
+                        isTradeRunning.value = false
+                    }
+
                 } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
                     /*
                     * if isOpenTP and isOpenSL both are true then need to check is LIMIT order is running or not
@@ -126,6 +135,9 @@ class MainViewModel : ViewModel() {
                     *
                     * if LIMIT status is NEW and isOpenTP or isOpenSL both of one status is FILLED, then close all of trades
                     * */
+
+                    infoTxt.value = "Invalid Trade closed...!"
+                    showNotification.value = Pair(true, infoTxt.value)
 
                     //close positions
                     cancelAllOpenOrders()
@@ -137,8 +149,6 @@ class MainViewModel : ViewModel() {
                     if (!isOpenSL) {
                         cancelTradeOrder(orderIdSL)
                     }
-                    infoTxt.value = "Invalid Trade closed...!"
-                    showNotification.value = Pair(true, infoTxt.value)
 
                 } else {
                     tradeRunStatus.value = "Trade is running..."
