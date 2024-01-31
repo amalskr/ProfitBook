@@ -8,7 +8,9 @@ import android.view.WindowManager
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -33,6 +37,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -92,6 +100,8 @@ fun MainScreen(navController: NavHostController) {
             )
 
             //Bottom Trade Info
+            var isContentVisible by remember { mutableStateOf(true) }
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -99,71 +109,100 @@ fun MainScreen(navController: NavHostController) {
                     .background(color = Color(0f, 0f, 0f, 0.7f))
             ) {
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    AccountTextView(mainVM)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                //bottom content
+                if (isContentVisible) {
+                    Box(
+                        modifier = Modifier
+                            .wrapContentSize(Alignment.BottomCenter)
+                            .background(MaterialTheme.colorScheme.background)
+                            .clickable { isContentVisible = !isContentVisible }
+                            .animateContentSize()
                     ) {
-                        if (!mainVM.isTradeRunning.value) {
-                            ActionButton(MainActivity.order_buy, mainVM)
-                            Spacer(modifier = Modifier.width(16.dp))
-                            ActionButton(MainActivity.order_sell, mainVM)
-                        } else {
-                            RunningTextView(mainVM)
+                        //start content
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+
+                            AccountTextView(mainVM)
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                if (!mainVM.isTradeRunning.value) {
+                                    ActionButton(MainActivity.order_buy, mainVM)
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    ActionButton(MainActivity.order_sell, mainVM)
+                                } else {
+                                    RunningTextView(mainVM)
+                                }
+                            }
+
+                            StatusTextView(mainVM)
                         }
+
+                        val lightWhite = Color(0xFFF2F2F2)
+
+                        //open app button
+                        IconButton(
+                            modifier = Modifier
+                                .align(Alignment.TopStart),
+                            onClick = { openBinance(context) }
+                        ) {
+                            Icon(
+                                Icons.Filled.ShoppingCart,
+                                tint = lightWhite,
+                                contentDescription = "Open Binance"
+                            )
+                        }
+
+                        //refresh button
+                        IconButton(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd),
+                            onClick = { mainVM.callBinanceInfo(isReload = true) }
+                        ) {
+                            Icon(
+                                Icons.Filled.Refresh,
+                                tint = lightWhite,
+                                contentDescription = "Reload Balance"
+                            )
+                        }
+
+                        //settings button
+                        IconButton(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd),
+                            onClick = { navController.navigate("settings") }
+                        ) {
+                            Icon(
+                                Icons.Filled.Settings,
+                                tint = lightWhite,
+                                contentDescription = "Open Settings"
+                            )
+                        }
+                        //end content
                     }
-
-                    StatusTextView(mainVM)
                 }
 
-                val lightWhite = Color(0xFFF2F2F2)
-
-                //open app button
-                IconButton(
+                // hide/show button
+                Box(
                     modifier = Modifier
-                        .align(Alignment.TopStart),
-                    onClick = { openBinance(context) }
+                        .align(Alignment.TopCenter)
                 ) {
-                    Icon(
-                        Icons.Filled.ShoppingCart,
-                        tint = lightWhite,
-                        contentDescription = "Open Binance"
-                    )
-                }
-
-                //refresh button
-                IconButton(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd),
-                    onClick = { mainVM.callBinanceInfo(isReload = true) }
-                ) {
-                    Icon(
-                        Icons.Filled.Refresh,
-                        tint = lightWhite,
-                        contentDescription = "Reload Balance"
-                    )
-                }
-
-                //settings button
-                IconButton(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd),
-                    onClick = { navController.navigate("settings") }
-                ) {
-                    Icon(
-                        Icons.Filled.Settings,
-                        tint = lightWhite,
-                        contentDescription = "Open Settings"
-                    )
+                    IconButton(
+                        onClick = { isContentVisible = !isContentVisible }
+                    ) {
+                        Icon(
+                            imageVector = if (isContentVisible) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp,
+                            contentDescription = if (isContentVisible) "Hide" else "Show",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 }
 
             }
