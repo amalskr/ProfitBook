@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -45,11 +44,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.ceylonapz.profitbook.R
 import com.ceylonapz.profitbook.util.NotificationHelper
 import com.ceylonapz.profitbook.util.findActivity
 import com.ceylonapz.profitbook.util.isScreenLightOn
@@ -153,7 +154,7 @@ fun MainScreen(navController: NavHostController) {
                             onClick = { openBinance(context) }
                         ) {
                             Icon(
-                                Icons.Filled.ShoppingCart,
+                                painter = painterResource(id = R.drawable.ic_binance),
                                 tint = lightWhite,
                                 contentDescription = "Open Binance"
                             )
@@ -166,7 +167,7 @@ fun MainScreen(navController: NavHostController) {
                             onClick = { openTradingView(context) }
                         ) {
                             Icon(
-                                Icons.Filled.ShoppingCart,
+                                painter = painterResource(id = R.drawable.ic_candlestick),
                                 tint = lightWhite,
                                 contentDescription = "Open TradingView"
                             )
