@@ -86,10 +86,7 @@ class MainViewModel : ViewModel() {
                     * It's not open yet
                     * */
                     infoTxt.value = "Order has not started. Closed All!"
-                    showNotification.value = Pair(true, infoTxt.value)
-
-                    cancelAllOpenOrders()
-                    isTradeRunning.value = false
+                    closeShowNotification()
 
                 } else if (marketData.size == 2 && isOpenLIMIT) {
                     /*
@@ -97,10 +94,7 @@ class MainViewModel : ViewModel() {
                     * if having LIMIT order
                     * */
                     infoTxt.value = "Open a wrong trade, Closed All!"
-                    showNotification.value = Pair(true, infoTxt.value)
-
-                    cancelAllOpenOrders()
-                    isTradeRunning.value = false
+                    closeShowNotification()
 
                 } else if (marketData.size == 1) {
 
@@ -111,7 +105,7 @@ class MainViewModel : ViewModel() {
 
                     if (positionData.positionAmt == 0) {
                         /*
-                        * no runing orders so need to display profit/loss notification
+                        * no running orders so need to display profit/loss notification
                         * */
                         val tradeCloseStatus = if (isOpenTP) {
                             "Loss"
@@ -122,10 +116,7 @@ class MainViewModel : ViewModel() {
                         }
 
                         infoTxt.value = "Trade $tradeCloseStatus!"
-                        showNotification.value = Pair(true, infoTxt.value)
-
-                        cancelAllOpenOrders()
-                        isTradeRunning.value = false
+                        closeShowNotification()
                     }
 
                 } else if (isOpenLIMIT && (!isOpenTP || !isOpenSL)) {
@@ -137,18 +128,7 @@ class MainViewModel : ViewModel() {
                     * */
 
                     infoTxt.value = "Invalid Trade closed...!"
-                    showNotification.value = Pair(true, infoTxt.value)
-
-                    //close positions
-                    cancelAllOpenOrders()
-
-                    if (!isOpenTP) {
-                        cancelTradeOrder(orderIdTP)
-                    }
-
-                    if (!isOpenSL) {
-                        cancelTradeOrder(orderIdSL)
-                    }
+                    closeShowNotification()
 
                 } else {
                     tradeRunStatus.value = "Trade is running..."
@@ -186,6 +166,15 @@ class MainViewModel : ViewModel() {
                 Log.e("trade status", e.toString())
             }
         }
+    }
+
+    private fun closeShowNotification() {
+        cancelAllOpenOrders()
+        cancelTradeOrder(orderIdTP)
+        cancelTradeOrder(orderIdSL)
+
+        isTradeRunning.value = false
+        showNotification.value = Pair(true, infoTxt.value)
     }
 
     private fun cancelAllOpenOrders() {
