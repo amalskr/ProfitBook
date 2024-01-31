@@ -106,7 +106,6 @@ fun MainScreen(navController: NavHostController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .wrapContentSize(Alignment.BottomCenter)
-                    .background(color = Color(0f, 0f, 0f, 0.7f))
             ) {
 
                 //bottom content
@@ -114,7 +113,7 @@ fun MainScreen(navController: NavHostController) {
                     Box(
                         modifier = Modifier
                             .wrapContentSize(Alignment.BottomCenter)
-                            .background(MaterialTheme.colorScheme.background)
+                            .background(color = Color(0f, 0f, 0f, 0.7f))
                             .clickable { isContentVisible = !isContentVisible }
                             .animateContentSize()
                     ) {
@@ -200,7 +199,7 @@ fun MainScreen(navController: NavHostController) {
                         Icon(
                             imageVector = if (isContentVisible) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp,
                             contentDescription = if (isContentVisible) "Hide" else "Show",
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = Color(0xFFF2F2F2)
                         )
                     }
                 }
@@ -214,9 +213,10 @@ fun showNotificationMessage(mainVM: MainViewModel, context: Context) {
     if (mainVM.showNotification.value.first) {
         val notificationHelper = NotificationHelper(context)
         notificationHelper.showNotification(
+            mainVM.showNotification.value.second,
             "ProfitBook Trading",
-            mainVM.showNotification.value.second
-        )
+
+            )
     }
 }
 
