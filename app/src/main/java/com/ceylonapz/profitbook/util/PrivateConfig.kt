@@ -1,11 +1,17 @@
 package com.ceylonapz.profitbook.util
 
+import com.ceylonapz.profitbook.BuildConfig
+
+/**
+ * Binance API credentials, read from `local.properties` at build time:
+ *
+ *     BINANCE_API_KEY=...
+ *     BINANCE_SECRET_KEY=...
+ */
 class PrivateConfig {
     companion object {
-        const val API_KEY: String =
-            "M9Wo0zU1Qr7kdOyl3bf0Rc0Ba8JRydmDTM1kNZRgunS7N8mMqfZr8xzNu9MJgES4"
-        const val SECRET_KEY: String =
-            "lVDCTs2VrwflfLcve8ek4SWVBPiaDkk37qC0338lrFpr2y4xS9Y86SinTo5SByB8"
+        const val API_KEY: String = BuildConfig.BINANCE_API_KEY
+        const val SECRET_KEY: String = BuildConfig.BINANCE_SECRET_KEY
     }
 
 }
